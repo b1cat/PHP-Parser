@@ -1,0 +1,38 @@
+name: Release
+on:
+  push:
+    branches:
+      - joern-5.x
+
+env:
+  COMPOSER: "composer-release.json"
+
+jobs:
+  create_release:
+    runs-on: "ubuntu-latest"
+    name: "Create release"
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2"
+      - name: "Install PHP"
+        uses: "shivammathur/setup-php@v2"
+        with:
+          php-version: "8.2"
+          tools: composer:v2
+      - name: "Install dependencies"
+        run: "composer update --no-progress --prefer-dist --ignore-platform-reqs"
+      - name: "Pack phar"
+        run: "php -d phar.readonly=false compiler/compiler.php"
+      - name: Bump version and push tag
+        id: tag_version
+        uses: anothrNick/github-tag-action@1.61.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: true
+          RELEASE_BRANCHES: 4.x
+          DEFAULT_BUMP: patch
+      - name: "Release"
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "php-parser.phar"
+          tag: ${{ steps.tag_version.outputs.new_tag }}
