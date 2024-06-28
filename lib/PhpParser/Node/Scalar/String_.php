@@ -117,7 +117,7 @@ class String_ extends Scalar {
                     return self::$replacements[$str];
                 }
                 if ('x' === $str[0] || 'X' === $str[0]) {
-                    return chr(hexdec(substr($str, 1)));
+                    return self::singleByteHexReplacement(substr($str, 1));
                 }
                 if ('u' === $str[0]) {
                     $dec = hexdec($matches[2]);
@@ -130,6 +130,15 @@ class String_ extends Scalar {
             $str
         );
     }
+
+    private static function singleByteHexReplacement(string $hexstr) : string {
+        $num = hexdec($hexstr);
+        if ($num <= 0x7F) {
+            return chr($num);
+        } else {
+            return '\x' . $hexstr;
+        }
+    }   
 
     /**
      * Converts a Unicode code point to its UTF-8 encoded representation.
